@@ -69,3 +69,9 @@ rfm['Segment'].value_counts().plot(kind='pie', autopct='%1.1f%%', colors=['gold'
 plt.title('Customer Segments Share')
 plt.ylabel('')
 plt.show()
+
+# --- [중요] 분석 결과를 CSV 파일로 저장하는 로직 ---
+# 데이터프레임 인덱스(customer_unique_id)를 포함하여 저장합니다.
+rfm.to_csv('./data/rfm_result.csv') 
+
+print("\n✅ [파일 생성 완료] ./data/rfm_result.csv 파일이 저장되었습니다.")
