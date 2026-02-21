@@ -6,10 +6,34 @@ from sklearn.metrics import classification_report, accuracy_score
 # 1. 데이터 로드
 df = pd.read_csv('./data/11_customer_behavior_by_segment.csv')
 
-# 2. 이탈 라벨 생성 (최근성 기준)
-df['is_churned'] = df['Recency'].apply(lambda x: 1 if x > 400 else 0)
+# 2. 이탈 라벨 생성 (분포 기반 복합 규칙)
+# - Recency: 상위 25% (최근 구매가 매우 오래된 고객)
+# - Frequency / Monetary: 하위 25% (구매 빈도나 금액이 특히 낮은 고객)
+recency_q3 = df['Recency'].quantile(0.75)
+freq_q1 = df['Frequency'].quantile(0.25)
+mon_q1 = df['Monetary'].quantile(0.25)
 
-# 3. 특성 및 타겟 설정
+print("[라벨 기준 요약]")
+print(f" - Recency 상위 25% 기준: {recency_q3:.2f}")
+print(f" - Frequency 하위 25% 기준: {freq_q1:.2f}")
+print(f" - Monetary 하위 25% 기준: {mon_q1:.2f}")
+
+# 조건:
+# 1) Recency 가 매우 크고(오래 안 산 고객) 이면서
+# 2) Frequency 가 매우 낮거나, Monetary 가 매우 낮은 경우를 이탈로 간주
+df['is_churned'] = df.apply(
+    lambda row: 1
+    if (row['Recency'] >= recency_q3) and (
+        (row['Frequency'] <= freq_q1) or (row['Monetary'] <= mon_q1)
+    )
+    else 0,
+    axis=1,
+)
+
+print("\n[라벨 분포 요약]")
+print(df['is_churned'].value_counts(normalize=True))
+
+# 3. 특성 및 타겟 설정 (여기서는 Frequency, Monetary만 사용)
 X = df[['Frequency', 'Monetary']]
 y = df['is_churned']
 
